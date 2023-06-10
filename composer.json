@@ -1,10 +1,11 @@
 {
-    "name": "wekyun/webman_tool",
+    "name": "wekyun/wekman_tool",
     "description": "webman",
     "type": "library",
-    "require": {
-    },
     "license": "MIT",
+    "require": {
+        "workerman/webman": "^1.5"
+    },
     "autoload": {
         "psr-4": {
             "Wekyun\\WebmanTool\\": "src/"
@@ -12,7 +13,7 @@
     },
     "authors": [
         {
-            "name": "hugang"
+            "name": "wekyun"
         }
     ]
 }

@@ -6,5 +6,20 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Wekyun\\WekmanTool\\' => array($baseDir . '/src'),
+    'support\\' => array($vendorDir . '/workerman/webman-framework/src/support'),
+    'app\\View\\Components\\' => array($vendorDir . '/workerman/webman/app/view/components'),
+    'app\\' => array($vendorDir . '/workerman/webman/app'),
+    'Workerman\\' => array($vendorDir . '/workerman/workerman'),
+    'Wekyun\\WebmanTool\\' => array($baseDir . '/src'),
+    'Webman\\' => array($vendorDir . '/workerman/webman-framework/src'),
+    'Support\\View\\' => array($vendorDir . '/workerman/webman-framework/src/support/view'),
+    'Support\\Exception\\' => array($vendorDir . '/workerman/webman-framework/src/support/exception'),
+    'Support\\Bootstrap\\' => array($vendorDir . '/workerman/webman-framework/src/support/bootstrap'),
+    'Support\\' => array($vendorDir . '/workerman/webman-framework/src/support'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
+    'Psr\\Container\\' => array($vendorDir . '/psr/container/src'),
+    'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
+    'FastRoute\\' => array($vendorDir . '/nikic/fast-route/src'),
+    'App\\' => array($vendorDir . '/workerman/webman/app'),
+    '' => array($vendorDir . '/workerman/webman'),
 );

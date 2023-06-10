@@ -1,13 +1,20 @@
 <?php
 
-namespace wekConfig;
+namespace Wekyun\WebmanTool;
 
-class wekConfig
+class WekConfig
 {
+
+//    public static function cs()
+//    {
+//        echo time();
+//    }
+
     /**
      * 配置方法setPluginConfigValue：基于xiuno 的文件配置修改成webman的插件配置修改
      * 如果需要改成自己的，可以继承wek类使用 file_replace_var 方法
      * */
+
     /**
      *
      * @return
