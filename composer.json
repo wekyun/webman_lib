@@ -1,0 +1,19 @@
+{
+    "name": "wekyun/wekman_tool",
+    "description": "webman",
+    "type": "library",
+    "require": {
+        "workerman/webman": "^1.5"
+    },
+    "license": "Apache-2.0 license",
+    "autoload": {
+        "psr-4": {
+            "Wekyun\\WekmanTool\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "wekyun"
+        }
+    ]
+}
