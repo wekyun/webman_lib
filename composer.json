@@ -4,7 +4,7 @@
     "type": "library",
     "require": {
     },
-    "license": "Apache-2.0 license",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Wekyun\\WekmanTool\\": "src/"
@@ -12,7 +12,7 @@
     },
     "authors": [
         {
-            "name": "wekyun"
+            "name": "hugang"
         }
     ]
 }
