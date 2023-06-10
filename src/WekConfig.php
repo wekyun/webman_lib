@@ -1,15 +1,15 @@
 <?php
 
-namespace Wekyun\WebmanTools;
+namespace Wekyun\WebmanLib;
 
 class WekConfig
 {
 
-//    public static function cs()
-//    {
-//        echo time();
-//        echo 'fdsf';
-//    }
+    public static function cs()
+    {
+        echo time();
+        echo 'fdsf';
+    }
 
     /**
      * 配置方法setPluginConfigValue：基于xiuno 的文件配置修改成webman的插件配置修改
@@ -31,7 +31,7 @@ class WekConfig
         }
         static $obj;
         if (!$obj) {
-            $obj = new wek();
+            $obj = new self();
         }
         return $obj->file_replace_var($plugin_config_path, $config_val);
     }

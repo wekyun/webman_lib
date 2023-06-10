@@ -1,10 +1,10 @@
 {
-    "name": "wekyun/webman_tools",
+    "name": "wekyun/webman_lib",
     "description": "webman tools",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Wekyun\\WebmanTools\\": "src/"
+            "Wekyun\\WebmanLib\\": "src/"
         }
     },
     "authors": [
