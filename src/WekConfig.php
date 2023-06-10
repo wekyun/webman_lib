@@ -1,6 +1,6 @@
 <?php
 
-namespace Wekyun\WebmanTool;
+namespace Wekyun\WebmanTools;
 
 class WekConfig
 {
@@ -8,6 +8,7 @@ class WekConfig
 //    public static function cs()
 //    {
 //        echo time();
+//        echo 'fdsf';
 //    }
 
     /**

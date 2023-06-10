@@ -1,19 +1,17 @@
 {
-    "name": "wekyun/wekman_tool",
-    "description": "webman",
-    "type": "library",
+    "name": "wekyun/webman_tools",
+    "description": "webman tools",
     "license": "MIT",
-    "require": {
-        "workerman/webman": "^1.5"
-    },
     "autoload": {
         "psr-4": {
-            "Wekyun\\WebmanTool\\": "src/"
+            "Wekyun\\WebmanTools\\": "src/"
         }
     },
     "authors": [
         {
-            "name": "wekyun"
+            "name": "胡刚",
+            "email": "wekyun@qq.com"
         }
-    ]
+    ],
+    "require": {}
 }
