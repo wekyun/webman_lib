@@ -12,4 +12,7 @@ $your_config_data = [
 //\Wekyun\WebmanLib\WekConfig::setPluginConfigValue($your_config_data, 'demo', 'aliDianBoConfig');
 
 //第一次开发使用，时候注意服务窗口的错误输出提示
-\Wekyun\WebmanLib\WekConfig::cs();
+//\Wekyun\WebmanLib\WekConfig::cs();
+
+\Wekyun\WebmanLib\Check::cs();
+

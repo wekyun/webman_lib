@@ -2,15 +2,18 @@
 
 namespace Wekyun\WebmanLib;
 
+
+
+/**
+ * 插件配置类
+ */
 class WekConfig
 {
-
-//    public static function cs()
-//    {
-//        echo time();
-//        echo 'fdsf';
-//    }
-
+    public static function cs()
+    {
+        echo time();
+        echo '黄2';
+    }
     /**
      * 配置方法setPluginConfigValue：基于xiuno 的文件配置修改成webman的插件配置修改
      * 如果需要改成自己的，可以继承wek类使用 file_replace_var 方法
@@ -240,3 +243,4 @@ class WekConfig
     /*==============================================================文件end===============================================================*/
 
 }
+
