@@ -1,6 +1,8 @@
 <?php
 include './vendor/autoload.php';
 
+use Wekyun\WebmanLib\Check;
+
 $your_config_data = [
     'title' => 'my_plugin_config',
     'name' => '胡刚',
@@ -14,5 +16,7 @@ $your_config_data = [
 //第一次开发使用，时候注意服务窗口的错误输出提示
 //\Wekyun\WebmanLib\WekConfig::cs();
 
-\Wekyun\WebmanLib\Check::cs();
+//\Wekyun\WebmanLib\Check::cs();
+
+//Check::checkAll('com', ['name', 'age', 'sex']);
 
