@@ -8,6 +8,6 @@ return [
     'err_code' => 203,//默认错误的错误码
     //此配置为必须,配置需要使用的验证场景类，需要按照目录创建文件写法参考TP的验证器文档
     'mapping' => [
-        'com' => \app\com\validate\Common::class,
+        'com' => \app\common\validate\Common::class,
     ],
 ];

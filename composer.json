@@ -1,6 +1,10 @@
 {
     "name": "wekyun/webman_lib",
     "description": "webman tools",
+    "type": "library",
+    "require": {
+        "php": ">=7.2"
+    },
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -12,6 +16,7 @@
             "name": "胡刚",
             "email": "wekyun@qq.com"
         }
-    ],
-    "require": {}
+    ]
+
+
 }
