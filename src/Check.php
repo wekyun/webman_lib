@@ -144,7 +144,6 @@ class Check
         if (!$name && !$param) return $input;
 //        var_dump($input);
 
-        $check = [];
         if (self::$config == []) {
             //加载
             $check = Config::get('check');
@@ -155,14 +154,14 @@ class Check
             self::$err_func = isset($check['err_func']) ? $check['err_func'] : false;
             self::$config = $check;
         }
-
         $obj = null;
         if (isset(self::$class[$name])) {
             //加载过直接使用
             $obj = self::$class[$name];
         } else {
-            $mapping = $check['mapping'];//保存自定义验证规则文件
+            $mapping = self::$config['mapping'];//保存自定义验证规则文件
             $class = $mapping[$name];
+
             try {
                 $obj = new $class();
                 self::$class[$name] = $obj;
