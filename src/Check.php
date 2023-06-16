@@ -2,8 +2,8 @@
 
 namespace Wekyun\WebmanLib;
 
-use think\exception\ValidateException;
 use Webman\Config;
+use Wekyun\WebmanLib\common\exception\CheckException;
 
 /**
  * @title TP验证类
@@ -13,8 +13,12 @@ class Check
     private static $config = [];
     private static $class = [];//容器对象池
 
+    private static $err_code;
+    private static $msg = false;
+    private static $err_func;
+
     //预定义验证场景类
-    private static $mapping = [];
+//    private static $mapping = [];
 
     //判断是否有值
     private static function check_isset_value($param, $check_key)
@@ -39,52 +43,106 @@ class Check
         return true;
     }
 
-    /** 调用指定验证场景类的场景
+    /**
+     * 验证Get和Post集合的参数
      * @autho hugang
      * @param string $name 场景类名
      * @param string $check_name 场景名
-     * @return 调用指定验证场景类的场景
+     * @return array|验证Get和Post集合的参数
      * */
     public static function checkAll($name = null, $param = null)
     {
         return self::checkBase($name, $param);
     }
 
-    /** 调用指定验证场景类的场景
+    /**
+     * 验证Get的参数
      * @autho hugang
      * @param string $name 场景类名
      * @param string $check_name 场景名
-     * @return 调用指定验证场景类的场景
+     * @return array|验证Get的参数
      * */
     public static function checkGet($name = null, $param = null)
     {
         return self::checkBase($name, $param);
     }
 
-    /** 调用指定验证场景类的场景
+    /**
+     * 验证Post的参数
      * @autho hugang
      * @param string $name 场景类名
      * @param string $check_name 场景名
-     * @return 调用指定验证场景类的场景
+     * @return array|验证Post的参数
      * */
     public static function checkPost($name = null, $param = null)
     {
         return self::checkBase($name, $param);
     }
 
-    /** 调用指定验证场景类的场景
+    /**
+     * 只接收指定的字段进行验证(get和post的参数都接受)
      * @autho hugang
      * @param string $name 场景类名
      * @param string $check_name 场景名
-     * @return 调用指定验证场景类的场景
+     * @return array|只接收指定的get和post字段进行验证
      * */
-    protected static function checkBase($name = null, $param = null, $param_type = 'all')
+    public static function checkOnlyAll($name = null, $param = null)
+    {
+        return self::checkBase($name, $param, 'all', true);
+    }
+
+    /**
+     * 只接收指定的字段进行验证(只接受get的参数)
+     * @autho hugang
+     * @param string $name 场景类名
+     * @param string $check_name 场景名
+     * @return array|只接收指定的get字段进行验证
+     * */
+    public static function checkOnlyGet($name = null, $param = null)
+    {
+        return self::checkBase($name, $param, 'get', true);
+    }
+
+    /**
+     * 只接收指定的字段进行验证(只接受post的参数)
+     * @autho hugang
+     * @param string $name 场景类名
+     * @param string $check_name 场景名
+     * @return array|只接收指定的post字段进行验证
+     * */
+    public static function checkOnlyPost($name = null, $param = null)
+    {
+        return self::checkBase($name, $param, 'post', true);
+    }
+
+    //获取所有参数：Post和Get的集合
+    private static function get_all_data($type, $param = '')
+    {
+        $r = \request();
+        switch ($type) {
+            case 'all':
+                return \request()->all();
+            case 'get':
+                return \request()->get();
+            case 'post':
+                return \request()->post();
+        }
+
+    }
+
+    /**
+     * @autho hugang
+     * @param string $name 场景类名
+     * @param string $check_name 场景名
+     * @return
+     * */
+    protected static function checkBase($name = null, $param = null, $param_type = 'all', $is_only = false)
     {
         $new_data = [];//最终接收的参数
         //参数为空，接收所有参数
         $input = self::get_all_data($param_type);
         if (!$name && !$param) return $input;
-        var_dump($input);
+//        var_dump($input);
 
         $check = [];
         if (self::$config == []) {
@@ -225,34 +283,11 @@ class Check
                 }
             }
         }
+        if ($is_only) {
+            return $new_data;
+        }
         return array_merge($input, $new_data);
     }
-
-    private static function get_param_data($check_name, $input)
-    {
-//        $data = [];
-//        foreach ($check_name as $key => $value) {
-//        }
-    }
-
-    //获取所有参数：Post和Get的集合
-    private static function get_all_data($type)
-    {
-        $r = \request();
-        switch ($type) {
-            case 'all':
-                return \request()->all();
-            case 'get':
-                return \request()->get();
-            case 'post':
-                return \request()->post();
-        }
-
-    }
-
-    public static $err_code;
-    public static $msg = false;
-    private static $err_func;
 
     //错误提示
     private static function err_json($msg)
@@ -261,7 +296,7 @@ class Check
         if (self::$err_func instanceof \Closure) {
             return self::$err_func($msg, self::$err_code);
         }
-        throw new ValidateException($msg, self::$err_code);
+        throw new CheckException($msg, self::$err_code);
     }
 
     /** 验证变量是否存在有值
