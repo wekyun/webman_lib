@@ -10,18 +10,16 @@ use Wekyun\WebmanLib\common\exception\CheckException;
  */
 class Check
 {
-    private static $config = [];
-    private static $class = [];//容器对象池
+    private static $config = [];//配置池(各个插件和官方配置隔离),用过就会被缓存下次用直接取值
+    private static $class = [];//验证规则对象池(各个插件和官方隔离)
 
     private static $err_code;
-    private static $msg = false;
+//    private static $msg = false;
     private static $err_func;
-
-    //预定义验证场景类
-//    private static $mapping = [];
+    private static $plugin_name;
 
     //判断是否有值
-    private static function check_isset_value($param, $check_key)
+    private static function check_isset_value($param, $check_key): bool
     {
         if (!isset($param[$check_key])) {
             return false;
@@ -46,11 +44,11 @@ class Check
     /**
      * 验证Get和Post集合的参数
      * @autho hugang
-     * @param string $name 场景类名
-     * @param string $check_name 场景名
+     * @param string|null $name 场景类名
+     * @param null $param
      * @return array|验证Get和Post集合的参数
-     * */
-    public static function checkAll($name = null, $param = null)
+     */
+    public static function checkAll(string $name = null, $param = null)
     {
         return self::checkBase($name, $param);
     }
@@ -58,11 +56,11 @@ class Check
     /**
      * 验证Get的参数
      * @autho hugang
-     * @param string $name 场景类名
-     * @param string $check_name 场景名
+     * @param string|null $name 场景类名
+     * @param null $param
      * @return array|验证Get的参数
-     * */
-    public static function checkGet($name = null, $param = null)
+     */
+    public static function checkGet(string $name = null, $param = null)
     {
         return self::checkBase($name, $param);
     }
@@ -70,11 +68,11 @@ class Check
     /**
      * 验证Post的参数
      * @autho hugang
-     * @param string $name 场景类名
-     * @param string $check_name 场景名
+     * @param string|null $name 场景类名
+     * @param null $param
      * @return array|验证Post的参数
-     * */
-    public static function checkPost($name = null, $param = null)
+     */
+    public static function checkPost(string $name = null, $param = null)
     {
         return self::checkBase($name, $param);
     }
@@ -82,11 +80,11 @@ class Check
     /**
      * 只接收指定的字段进行验证(get和post的参数都接受)
      * @autho hugang
-     * @param string $name 场景类名
-     * @param string $check_name 场景名
+     * @param string|null $name 场景类名
+     * @param null $param
      * @return array|只接收指定的get和post字段进行验证
-     * */
-    public static function checkOnlyAll($name = null, $param = null)
+     */
+    public static function checkOnlyAll(string $name = null, $param = null)
     {
         return self::checkBase($name, $param, 'all', true);
     }
@@ -94,11 +92,11 @@ class Check
     /**
      * 只接收指定的字段进行验证(只接受get的参数)
      * @autho hugang
-     * @param string $name 场景类名
-     * @param string $check_name 场景名
+     * @param string|null $name 场景类名
+     * @param null $param
      * @return array|只接收指定的get字段进行验证
-     * */
-    public static function checkOnlyGet($name = null, $param = null)
+     */
+    public static function checkOnlyGet(string $name = null, $param = null)
     {
         return self::checkBase($name, $param, 'get', true);
     }
@@ -106,70 +104,104 @@ class Check
     /**
      * 只接收指定的字段进行验证(只接受post的参数)
      * @autho hugang
-     * @param string $name 场景类名
-     * @param string $check_name 场景名
+     * @param string|null $name 场景类名
+     * @param null $param
      * @return array|只接收指定的post字段进行验证
-     * */
-    public static function checkOnlyPost($name = null, $param = null)
+     */
+    public static function checkOnlyPost(string $name = null, $param = null)
     {
         return self::checkBase($name, $param, 'post', true);
     }
 
     //获取所有参数：Post和Get的集合
-    private static function get_all_data($type, $param = '')
+    private static function get_all_data($type)
     {
-        $r = \request();
+        $data = null;
+        $r = request();
         switch ($type) {
             case 'all':
-                return \request()->all();
+                $data = request()->all();
             case 'get':
-                return \request()->get();
+                $data = request()->get();
             case 'post':
-                return \request()->post();
+                $data = request()->post();
         }
+        return $data;
+    }
 
+    //获取当前运行插件或者非插件的配置
+    protected static function get_this_config_data()
+    {
+        $plugin_name = self::$plugin_name;
+        return self::$config[$plugin_name] ?? [];
+    }
+
+    //
+    protected static function get_this_class_obj($name)
+    {
+        $plugin_name = self::$plugin_name;
+        $class_name = $plugin_name . '_' . $name;
+        return self::$class[$class_name] ?? false;
+    }
+
+    protected static function save_this_class_obj($name, $obj)
+    {
+        $plugin_name = self::$plugin_name;
+        self::$class[$plugin_name . '_' . $name] = $obj;
     }
 
     /**
      * @autho hugang
-     * @param string $name 场景类名
-     * @param string $check_name 场景名
-     * @return
-     * */
-    protected static function checkBase($name = null, $param = null, $param_type = 'all', $is_only = false)
+     * @param null $name 场景类名
+     * @param null $param
+     * @param string $param_type
+     * @param bool $is_only
+     * @return array|mixed|null
+     * @throws CheckException
+     */
+    protected static function checkBase($name = null, $param = null, string $param_type = 'all', bool $is_only = false)
     {
         $new_data = [];//最终接收的参数
         //参数为空，接收所有参数
         $input = self::get_all_data($param_type);
         if (!$name && !$param) return $input;
-//        var_dump($input);
-
-        if (self::$config == []) {
-            //加载
-            $check = Config::get('check');
-            if (!$check) return self::err_json('check验证配置为空');
-            if (!isset($check['mapping'])) return self::err_json('验证配置:mapping 未定义');
-            if (count($check['mapping']) == 0) return self::err_json('验证配置:mapping 值为空');
-            self::$err_code = isset($check['err_code']) ? $check['err_code'] : 203;
-            self::$err_func = isset($check['err_func']) ? $check['err_func'] : false;
-            self::$config = $check;
+        $dfCconfigKey = 'webman_guanfang_Confgig_999';
+        $plugin_name = $dfCconfigKey;//这是一个不会重复的名称,每个应用插件都有一个唯一标识，这个标识由字母组成。
+        list(, $caller) = debug_backtrace(false, 2);
+        if (strpos($caller['file'], 'plugin') !== false) {//插件中运行
+            $result_str = substr($caller['file'], strripos($caller['file'], "plugin") + 1);
+            $plugin_res_array = explode(DIRECTORY_SEPARATOR, $result_str);
+            $plugin_name = $plugin_res_array[1];
         }
-        $obj = null;
-        if (isset(self::$class[$name])) {
-            //加载过直接使用
-            $obj = self::$class[$name];
-        } else {
-            $mapping = self::$config['mapping'];//保存自定义验证规则文件
-            $class = $mapping[$name];
-
+        self::$plugin_name = $plugin_name;
+        $config = self::get_this_config_data();
+        $configErr = '';
+        if ($config == []) {
+            //加载
+            if ($plugin_name == $dfCconfigKey) {//非插件
+                $config = config('check');
+                $configErr = '系统';
+            } else {
+                $config = config('plugin.' . $plugin_name . '.check');
+                $configErr = '插件[' . $plugin_name . ']';
+            }
+            if (!$config) return self::err_json($configErr . ' check验证配置为空');
+            if (!isset($config['mapping'])) return self::err_json('验证配置:mapping 未定义');
+            if (count($config['mapping']) == 0) return self::err_json('验证配置:mapping 值为空');
+            self::$err_code = $config['err_code'] ?? 203;
+            self::$err_func = $config['err_func'] ?? false;
+            self::$config[$plugin_name] = $config;
+        }
+        $obj = self::get_this_class_obj($name);
+        if (!$obj) {
+            $class = $config['mapping'][$name];
             try {
                 $obj = new $class();
-                self::$class[$name] = $obj;
+                self::save_this_class_obj($name, $obj);
             } catch (\Exception $e) {
                 return self::err_json('验证规则配置文件错误，请检查验证配置文件mapping设置的验证器路径是否正确；' . $e->getMessage());
             }
         }
-
         if (is_string($param)) {
             $param = explode(',', $param);
         }
@@ -184,7 +216,6 @@ class Check
             }
             $value_more = explode('.', $value);//0是key部分未解析的，1是默认值和提示部分的
             $check_key = null;
-//            dd($value_more);
             $vali_data = [
                 'key' => '',
                 'def_val' => '',
@@ -238,7 +269,6 @@ class Check
                 $vali_data['key'] = $value_more0_val[0];
                 $vali_data['tips_name'] = $value_more0_val[1];
             }
-//            dd($vali_data);
 
             $data_log_name_more = explode('!', $vali_data['key']);
             $is_check_rule = false;
@@ -291,9 +321,10 @@ class Check
     //错误提示
     private static function err_json($msg)
     {
-        self::$msg = $msg;
-        if (self::$err_func instanceof \Closure) {
-            return self::$err_func($msg, self::$err_code);
+//        self::$msg = $msg;
+        $err_func = self::$err_func;
+        if ($err_func instanceof \Closure) {
+            return $err_func($msg, self::$err_code);
         }
         throw new CheckException($msg, self::$err_code);
     }
@@ -303,7 +334,7 @@ class Check
      * @param string $val 场景类名
      * @return 验证变量是否存在有值
      * */
-    private static function is_mast($val)
+    private static function is_mast(string $val): bool
     {
         if (strlen($val) > 0) {
             return true;
