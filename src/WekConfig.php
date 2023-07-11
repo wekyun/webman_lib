@@ -16,11 +16,19 @@ class WekConfig
      * 如果需要改成自己的，可以继承wek类使用 file_replace_var 方法
      * */
 
+    /*
+    使用演示:
+    $cs = ['dict_upload' => 'cccc'];
+    $res = WekConfig::setPluginConfigValue($cs, 'demo', 'bbs');//demo是你插件名,bbs是你配置文件名
+    var_dump($res);//这是新的数组
+
+    */
+
     /**
      *
-     * @return
+     * @return array|新配置
      */
-    public static function setPluginConfigValue(array $config_val, string $plugin_name, $file_name)
+    public static function setPluginConfigValue(array $config_val, string $plugin_name, $file_name): array
     {
         if (!defined('BASE_PATH')) return var_dump('请安装 webman 再使用');
         if (!is_array($config_val)) return var_dump('config data is must array');
@@ -38,7 +46,7 @@ class WekConfig
 
     /*==============================================文件================================================*/
     // 将变量写入到文件，根据后缀判断文件格式，先备份，再写入，写入失败，还原备份
-    protected function file_replace_var($filepath, $replace = array(), $pretty = FALSE)
+    protected function file_replace_var($filepath, $replace = array(), $pretty = FALSE): array
     {
         $ext = $this->file_ext($filepath);
         if ($ext == 'php') {
@@ -56,8 +64,10 @@ class WekConfig
             // 备份文件
             $this->file_backup($filepath);
             $r = $this->file_put_contents_try($filepath, $s);
+//            var_dump($arr);
             $r != strlen($s) ? $this->file_backup_restore($filepath) : $this->file_backup_unlink($filepath);
-            return $r;
+//            return $r;
+            return $arr;
         } elseif ($ext == 'js' || $ext == 'json') {
             $s = $this->file_get_contents_try($filepath);
             $arr = $this->xn_json_decode($s);
@@ -67,7 +77,8 @@ class WekConfig
             $this->file_backup($filepath);
             $r = $this->file_put_contents_try($filepath, $s);
             $r != strlen($s) ? $this->file_backup_restore($filepath) : $this->file_backup_unlink($filepath);
-            return $r;
+//            return $r;
+            return $arr;
         }
     }
 
@@ -122,8 +133,7 @@ class WekConfig
     private function file_backup_unlink($filepath)
     {
         $backfile = $this->file_backname($filepath);
-        $r = $this->xn_unlink($backfile);
-        return $r;
+        return = $this->xn_unlink($backfile);
     }
 
     private function file_get_contents_try($file, $times = 3)
@@ -211,8 +221,7 @@ class WekConfig
 
     private function xn_copy($src, $dest)
     {
-        $r = is_file($src) ? copy($src, $dest) : FALSE;
-        return $r;
+        return is_file($src) ? copy($src, $dest) : FALSE;
     }
 
     private function file_backname($filepath)
@@ -222,8 +231,7 @@ class WekConfig
         //$filename = file_name($filepath);
         $filepre = $this->file_pre($filepath);
         $fileext = $this->file_ext($filepath);
-        $s = "$filepre.backup.$fileext";
-        return $s;
+        return "$filepre.backup.$fileext";
     }
 
     // 文件的前缀，不包含最后一个 .
@@ -234,8 +242,7 @@ class WekConfig
 
     private function xn_unlink($file)
     {
-        $r = is_file($file) ? unlink($file) : FALSE;
-        return $r;
+        return is_file($file) ? unlink($file) : FALSE;
     }
     /*==============================================================文件end===============================================================*/
 

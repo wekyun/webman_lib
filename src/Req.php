@@ -2,46 +2,50 @@
 
 namespace Wekyun\WebmanLib;
 
-use Webman\Config;
+use Webman\Context;
+use Webman\Http\UploadFile;
 use Wekyun\WebmanLib\common\exception\CheckException;
 
 /**
- * @title TP验证类
- * Class Check
+ * Class Req
  * @package Wekyun
  */
-class Check extends \Webman\Http\Request
+//Context::set(Req::class);
+
+class Req
 {
+    private $req;
+
     private static $config = [];//配置池(各个插件和官方配置隔离),用过就会被缓存下次用直接取值
     private static $class = [];//验证规则对象池(各个插件和官方隔离)
 
     private static $err_code;
-//    private static $msg = false;
     private static $err_func;
     private static $plugin_name;
+    private static $setFieldVal = '';
 
-    //判断是否有值
-    private static function check_isset_value($param, $check_key): bool
+    //私有克隆方法，防止克隆
+    private function __clone()
     {
-        if (!isset($param[$check_key])) {
-            return false;
-        }
-        if (is_string($param[$check_key]) && strlen($param[$check_key]) > 0) {
-            return true;
-        }
-
-        if (is_array($param[$check_key]) && count($param[$check_key]) > 0) {
-            return true;
-        }
-
-        if (!$param[$check_key]) {
-            if ($param[$check_key] === 0 || $param[$check_key] === '0') {
-                return true;
-            }
-            return false;
-        }
-        return true;
     }
+
+    public function __construct()
+    {
+        $this->req = \request();
+        Context::set(self::class, $this);
+    }
+
+    public static function getInstance()
+    {
+        if (Context::get(self::class)) {
+            return Context::get(self::class);
+        }
+        $obj = new self();
+        $obj->req = \request();
+        Context::set(self::class, $obj);
+        return $obj;
+    }
+
 
     /**
      * 验证Get和Post集合的参数
@@ -50,9 +54,22 @@ class Check extends \Webman\Http\Request
      * @param null $param
      * @return array|验证Get和Post集合的参数
      */
-    public static function checkAll(string $name = null, $param = null)
+    public function checkAll(string $name = null, $param = null)
     {
-        return self::checkBase($name, $param);
+        return $this->checkBase($name, $param);
+    }
+
+
+    //设置从指定的字段中接收参数:例如 从field中接受指定的参数
+    //field[username]: admin
+    //field[password]: admin123
+    //field[captcha]: sdfs
+    public function setField($field): Req
+    {
+        if (strlen($field) > 0) {
+            self::$setFieldVal = $field;
+        }
+        return $this;
     }
 
     /**
@@ -62,9 +79,9 @@ class Check extends \Webman\Http\Request
      * @param null $param
      * @return array|验证Get的参数
      */
-    public static function checkGet(string $name = null, $param = null)
+    public function checkGet(string $name = null, $param = null)
     {
-        return self::checkBase($name, $param);
+        return $this->checkBase($name, $param);
     }
 
     /**
@@ -74,9 +91,9 @@ class Check extends \Webman\Http\Request
      * @param null $param
      * @return array|验证Post的参数
      */
-    public static function checkPost(string $name = null, $param = null)
+    public function checkPost(string $name = null, $param = null)
     {
-        return self::checkBase($name, $param);
+        return $this->checkBase($name, $param);
     }
 
     /**
@@ -86,9 +103,9 @@ class Check extends \Webman\Http\Request
      * @param null $param
      * @return array|只接收指定的get和post字段进行验证
      */
-    public static function checkOnlyAll(string $name = null, $param = null)
+    public function checkOnlyAll(string $name = null, $param = null)
     {
-        return self::checkBase($name, $param, 'all', true);
+        return $this->checkBase($name, $param, 'all', true);
     }
 
     /**
@@ -98,9 +115,9 @@ class Check extends \Webman\Http\Request
      * @param null $param
      * @return array|只接收指定的get字段进行验证
      */
-    public static function checkOnlyGet(string $name = null, $param = null)
+    public function checkOnlyGet(string $name = null, $param = null)
     {
-        return self::checkBase($name, $param, 'get', true);
+        return $this->checkBase($name, $param, 'get', true);
     }
 
     /**
@@ -110,23 +127,22 @@ class Check extends \Webman\Http\Request
      * @param null $param
      * @return array|只接收指定的post字段进行验证
      */
-    public static function checkOnlyPost(string $name = null, $param = null)
+    public function checkOnlyPost(string $name = null, $param = null)
     {
-        return self::checkBase($name, $param, 'post', true);
+        return $this->checkBase($name, $param, 'post', true);
     }
 
     //获取所有参数：Post和Get的集合
-    private static function get_all_data($type)
+    private function get_all_data($type)
     {
         $data = null;
-        $r = request();
         switch ($type) {
             case 'all':
-                $data = self::all();
+                $data = $this->req->all(self::$setFieldVal);
             case 'get':
-                $data = self::get();
+                $data = $this->req->get(self::$setFieldVal);
             case 'post':
-                $data = self::post();
+                $data = $this->req->post(self::$setFieldVal);
         }
         return $data;
     }
@@ -138,7 +154,6 @@ class Check extends \Webman\Http\Request
         return self::$config[$plugin_name] ?? [];
     }
 
-    //
     protected static function get_this_class_obj($name)
     {
         $plugin_name = self::$plugin_name;
@@ -161,11 +176,11 @@ class Check extends \Webman\Http\Request
      * @return array|mixed|null
      * @throws CheckException
      */
-    protected static function checkBase($name = null, $param = null, string $param_type = 'all', bool $is_only = false)
+    protected function checkBase($name = null, $param = null, string $param_type = 'all', bool $is_only = false)
     {
         $new_data = [];//最终接收的参数
         //参数为空，接收所有参数
-        $input = self::get_all_data($param_type);
+        $input = $this->get_all_data($param_type);
         if (!$name && !$param) return $input;
         $dfCconfigKey = 'webman_guanfang_Confgig_999';
         $plugin_name = $dfCconfigKey;//这是一个不会重复的名称,每个应用插件都有一个唯一标识，这个标识由字母组成。
@@ -314,6 +329,8 @@ class Check extends \Webman\Http\Request
                 }
             }
         }
+        //删除指定的集合字段参数
+        self::$setFieldVal = '';
         if ($is_only) {
             return $new_data;
         }
@@ -323,7 +340,8 @@ class Check extends \Webman\Http\Request
     //错误提示
     private static function err_json($msg)
     {
-//        self::$msg = $msg;
+        //删除指定的集合字段参数
+        self::$setFieldVal = '';
         $err_func = self::$err_func;
         if ($err_func instanceof \Closure) {
             return $err_func($msg, self::$err_code);
@@ -344,5 +362,326 @@ class Check extends \Webman\Http\Request
         return false;
     }
 
+    //判断是否有值
+    private static function check_isset_value($param, $check_key): bool
+    {
+        if (!isset($param[$check_key])) {
+            return false;
+        }
+        if (is_string($param[$check_key]) && strlen($param[$check_key]) > 0) {
+            return true;
+        }
+
+        if (is_array($param[$check_key]) && count($param[$check_key]) > 0) {
+            return true;
+        }
+
+        if (!$param[$check_key]) {
+            if ($param[$check_key] === 0 || $param[$check_key] === '0') {
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /*==================扩展请求对象=================*/
+
+
+    /**
+     * Input
+     * @param string $name
+     * @param mixed $default
+     * @return mixed|null
+     */
+    public function input(string $name, $default = null)
+    {
+        return $this->req->input($name, $default);
+    }
+
+    /**
+     * Only
+     * @param array $keys
+     * @return array
+     */
+    public function only(array $keys): array
+    {
+        return $this->req->only($keys);
+    }
+
+    /**
+     * Except
+     * @param array $keys
+     * @return mixed|null
+     */
+    public function except(array $keys)
+    {
+        return $this->req->except($keys);
+    }
+
+    /**
+     * File
+     * @param string|null $name
+     * @return null|UploadFile[]|UploadFile
+     */
+    public function file($name = null)
+    {
+        return $this->req->file($name);
+    }
+
+    /**
+     * GetRemoteIp
+     * @return string
+     */
+    public function getRemoteIp(): string
+    {
+        return $this->req->getRemoteIp();
+    }
+
+    /**
+     * GetRemotePort
+     * @return int
+     */
+    public function getRemotePort(): int
+    {
+        return $this->req->getRemotePort();
+    }
+
+    /**
+     * GetLocalIp
+     * @return string
+     */
+    public function getLocalIp(): string
+    {
+        return $this->req->getLocalIp();
+    }
+
+    /**
+     * GetLocalPort
+     * @return int
+     */
+    public function getLocalPort(): int
+    {
+        return $this->req->getLocalPort();
+    }
+
+    /**
+     * GetRealIp
+     * @param bool $safeMode
+     * @return string
+     */
+    public function getRealIp(bool $safeMode = true): string
+    {
+        return $this->req->getRealIp($safeMode);
+    }
+
+    /**
+     * Url
+     * @return string
+     */
+    public function url(): string
+    {
+        return $this->req->url();
+    }
+
+    /**
+     * FullUrl
+     * @return string
+     */
+    public function fullUrl(): string
+    {
+        return $this->req->fullUrl();
+    }
+
+    /**
+     * IsAjax
+     * @return bool
+     */
+    public function isAjax(): bool
+    {
+        return $this->req->isAjax();
+    }
+
+    /**
+     * IsPjax
+     * @return bool
+     */
+    public function isPjax(): bool
+    {
+        return $this->req->isPjax();
+    }
+
+    /**
+     * ExpectsJson
+     * @return bool
+     */
+    public function expectsJson(): bool
+    {
+        return $this->req->expectsJson();
+    }
+
+    /**
+     * AcceptJson
+     * @return bool
+     */
+    public function acceptJson(): bool
+    {
+        return $this->req->acceptJson();
+    }
+
+
+    /*====================================================*/
+    public function get($name = null, $default = null)
+    {
+        return $this->req->get($name, $default);
+    }
+
+    /**
+     * $_POST.
+     *
+     * @param string|null $name
+     * @param mixed|null $default
+     * @return mixed|null
+     */
+    public function post($name = null, $default = null)
+    {
+        return $this->req->post($name, $default);
+    }
+
+    /**
+     * Get header item by name.
+     *
+     * @param string|null $name
+     * @param mixed|null $default
+     * @return array|string|null
+     */
+    public function header($name = null, $default = null)
+    {
+        return $this->req->header($name, $default);
+    }
+
+    /**
+     * Get cookie item by name.
+     *
+     * @param string|null $name
+     * @param mixed|null $default
+     * @return array|string|null
+     */
+    public function cookie($name = null, $default = null)
+    {
+        return $this->req->cookie($name, $default);
+    }
+
+    /**
+     * Get method.
+     *
+     * @return string
+     */
+    public function method()
+    {
+        return $this->req->method();
+    }
+
+    /**
+     * Get http protocol version.
+     *
+     * @return string
+     */
+    public function protocolVersion()
+    {
+        return $this->req->protocolVersion();
+    }
+
+    /**
+     * Get host.
+     *
+     * @param bool $without_port
+     * @return string
+     */
+    public function host($without_port = false)
+    {
+        return $this->req->host($without_port);
+    }
+
+    /**
+     * Get uri.
+     *
+     * @return mixed
+     */
+    public function uri()
+    {
+        return $this->req->uri();
+    }
+
+    /**
+     * Get path.
+     *
+     * @return mixed
+     */
+    public function path()
+    {
+        return $this->req->path();
+    }
+
+    /**
+     * Get query string.
+     *
+     * @return mixed
+     */
+    public function queryString()
+    {
+        return $this->req->queryString();
+    }
+
+    /**
+     * Get session.
+     *
+     * @return bool|\Workerman\Protocols\Http\Session
+     */
+    public function session()
+    {
+        return $this->req->session();
+    }
+
+    /**
+     * Get/Set session id.
+     *
+     * @param $session_id
+     * @return string
+     */
+    public function sessionId($session_id = null)
+    {
+        return $this->req->sessionId($session_id);
+    }
+
+    /**
+     * Get http raw head.
+     *
+     * @return string
+     */
+    public function rawHead()
+    {
+        return $this->req->rawHead();
+    }
+
+    /**
+     * Get http raw body.
+     *
+     * @return string
+     */
+    public function rawBody()
+    {
+        return $this->req->rawBody();
+    }
+
+    /**
+     * Get raw buffer.
+     *
+     * @return string
+     */
+    public function rawBuffer()
+    {
+        return $this->req->rawBuffer();
+    }
 
 }
