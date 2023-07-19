@@ -10,7 +10,6 @@ use Wekyun\WebmanLib\common\exception\CheckException;
  * Class Req
  * @package Wekyun
  */
-
 class Req
 {
     private $req;
@@ -508,6 +507,18 @@ class Req
     public function isAjax(): bool
     {
         return $this->req->isAjax();
+    }
+
+    /**
+     * isPost
+     * @return bool
+     */
+    public function isPost(): bool
+    {
+        if ($this->req->method() === 'POST') {
+            return true;
+        }
+        return false;
     }
 
     /**
