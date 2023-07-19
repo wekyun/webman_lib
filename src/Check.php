@@ -16,9 +16,10 @@ class Check extends \Webman\Http\Request
     private static $class = [];//验证规则对象池(各个插件和官方隔离)
 
     private static $err_code;
-//    private static $msg = false;
     private static $err_func;
     private static $plugin_name;
+
+    private static $setFieldVal = '';
 
     //判断是否有值
     private static function check_isset_value($param, $check_key): bool
@@ -122,11 +123,14 @@ class Check extends \Webman\Http\Request
         $r = request();
         switch ($type) {
             case 'all':
-                $data = self::all();
+                $data = self::all(self::$setFieldVal);
             case 'get':
-                $data = self::get();
+                $data = self::get(self::$setFieldVal);
             case 'post':
-                $data = self::post();
+                $data = self::post(self::$setFieldVal);
+        }
+        if (self::$setFieldVal != '') {
+            return $data[self::$setFieldVal];
         }
         return $data;
     }
@@ -314,6 +318,8 @@ class Check extends \Webman\Http\Request
                 }
             }
         }
+        //删除指定的集合字段参数
+        self::$setFieldVal = '';
         if ($is_only) {
             return $new_data;
         }
@@ -323,7 +329,8 @@ class Check extends \Webman\Http\Request
     //错误提示
     private static function err_json($msg)
     {
-//        self::$msg = $msg;
+        //删除指定的集合字段参数
+        self::$setFieldVal = '';
         $err_func = self::$err_func;
         if ($err_func instanceof \Closure) {
             return $err_func($msg, self::$err_code);

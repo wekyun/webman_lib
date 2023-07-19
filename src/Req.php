@@ -10,7 +10,6 @@ use Wekyun\WebmanLib\common\exception\CheckException;
  * Class Req
  * @package Wekyun
  */
-//Context::set(Req::class);
 
 class Req
 {
@@ -139,10 +138,19 @@ class Req
         switch ($type) {
             case 'all':
                 $data = $this->req->all(self::$setFieldVal);
+                break;
             case 'get':
                 $data = $this->req->get(self::$setFieldVal);
+                break;
             case 'post':
                 $data = $this->req->post(self::$setFieldVal);
+                break;
+            default:
+                $data = $this->req->all(self::$setFieldVal);
+                break;
+        }
+        if (self::$setFieldVal != '') {
+            return $data[self::$setFieldVal];
         }
         return $data;
     }

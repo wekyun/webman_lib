@@ -5,12 +5,6 @@ namespace Wekyun\WebmanLib;
 class WekConfig
 {
 
-//    public static function cs()
-//    {
-//        echo time();
-//        echo 'fdsf';
-//    }
-
     /**
      * 配置方法setPluginConfigValue：基于xiuno 的文件配置修改成webman的插件配置修改
      * 如果需要改成自己的，可以继承wek类使用 file_replace_var 方法
@@ -21,7 +15,6 @@ class WekConfig
     $cs = ['dict_upload' => 'cccc'];
     $res = WekConfig::setPluginConfigValue($cs, 'demo', 'bbs');//demo是你插件名,bbs是你配置文件名
     var_dump($res);//这是新的数组
-
     */
 
     /**

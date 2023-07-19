@@ -2,14 +2,6 @@
 
 基于webman的工具：安装
 
-使用阿里云的composer镜像无法安装到插件，目前华为测试可以，所以需要先更改到华为的镜像源。
-
-### 华为镜像如下：
-
-```
- composer config -g repo.packagist composer https://mirrors.huaweicloud.com/repository/php/
-```
-
 ### composer安装组件命令如下：请在项目根目录下执行
 
 ~~~php
