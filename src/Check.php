@@ -122,12 +122,16 @@ class Check extends \Webman\Http\Request
         $data = null;
         $r = request();
         switch ($type) {
-            case 'all':
-                $data = self::all(self::$setFieldVal);
             case 'get':
-                $data = self::get(self::$setFieldVal);
+                $data = $r->get();
+                break;
             case 'post':
-                $data = self::post(self::$setFieldVal);
+                $data = $r->post(self::$setFieldVal);
+                break;
+            case 'all':
+            default:
+                $data = $r->all(self::$setFieldVal);
+                break;
         }
         if (self::$setFieldVal != '') {
             return $data[self::$setFieldVal];
