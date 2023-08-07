@@ -135,15 +135,13 @@ class Req
     {
         $data = null;
         switch ($type) {
-            case 'all':
-                $data = $this->req->all(self::$setFieldVal);
-                break;
             case 'get':
-                $data = $this->req->get(self::$setFieldVal);
+                $data = $this->req->get();
                 break;
             case 'post':
                 $data = $this->req->post(self::$setFieldVal);
                 break;
+            case 'all':
             default:
                 $data = $this->req->all(self::$setFieldVal);
                 break;
