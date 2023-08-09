@@ -139,11 +139,19 @@ class Req
                 $data = $this->req->get();
                 break;
             case 'post':
-                $data = $this->req->post(self::$setFieldVal);
+                if (self::$setFieldVal) {
+                    $data = $this->req->post(self::$setFieldVal);
+                } else {
+                    $data = $this->req->post();
+                }
                 break;
             case 'all':
             default:
-                $data = $this->req->all(self::$setFieldVal);
+                if (self::$setFieldVal) {
+                    $data = $this->req->all(self::$setFieldVal);
+                } else {
+                    $data = $this->req->all();
+                }
                 break;
         }
         if (self::$setFieldVal != '') {

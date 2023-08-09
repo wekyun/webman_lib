@@ -126,11 +126,19 @@ class Check extends \Webman\Http\Request
                 $data = $r->get();
                 break;
             case 'post':
-                $data = $r->post(self::$setFieldVal);
+                if (self::$setFieldVal) {
+                    $data = $r->post(self::$setFieldVal);
+                } else {
+                    $data = $r->post();
+                }
                 break;
             case 'all':
             default:
-                $data = $r->all(self::$setFieldVal);
+                if (self::$setFieldVal) {
+                    $data = $r->all(self::$setFieldVal);
+                } else {
+                    $data = $r->all();
+                }
                 break;
         }
         if (self::$setFieldVal != '') {
